@@ -95,6 +95,15 @@ jobs:
           echo "Built event payload:"
           cat /tmp/event.json
 
+      - name: Read event payload into output
+        id: read-event
+        run: |
+          {
+            echo 'payload<<DELIBERATE_EOF'
+            cat /tmp/event.json
+            echo 'DELIBERATE_EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Run orchestrator
         uses: anthropics/claude-code-action@v1
         env:
@@ -105,7 +114,13 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           plugin-url: https://github.com/scottholdren/deliberate
           prompt: |
-            Run the orchestrator skill for the following event:
+            Invoke the `/deliberate:orchestrator` skill from the deliberate plugin.
+            The event payload to process is:
 
-            $(cat /tmp/event.json)
+            ```json
+            ${{ steps.read-event.outputs.payload }}
+            ```
+
+            After invoking the skill, report what stage the issue advanced to (or
+            why no advancement occurred) in one sentence.
           allowed-tools: Read,Bash,Task
