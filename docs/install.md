@@ -12,7 +12,19 @@ This doc walks you from zero to a working Deliberate setup against a test repo. 
 - Anthropic API key (https://console.anthropic.com).
 - Claude Code installed locally (only needed if you want to run `/init-project` locally; the orchestrator itself runs in cloud Actions).
 
-## Step 1: Create a GitHub App
+## Step 1a: Install Anthropic's Claude Code GitHub App
+
+The `anthropics/claude-code-action` workflow action authenticates via OIDC against Anthropic's official Claude Code App. This App must be installed on the fixture repo (and any other repo where Deliberate workflows run) before the action can run at all.
+
+1. Go to **https://github.com/apps/claude** and click **Install**.
+2. Pick **Only select repositories** and choose `deliberate-fixture` (and any other repos you want Deliberate to manage).
+3. Confirm.
+
+This is separate from the `deliberate-bot` App you create in step 1b. Anthropic's App handles the action's runtime auth; the `deliberate-bot` App provides our custom bot identity for issues, comments, and PRs.
+
+> **Architectural note**: in v0 Deliberate uses both Apps. v0.2 may consolidate to just one — track in `DESIGN.md` open questions.
+
+## Step 1b: Create a GitHub App
 
 1. Go to https://github.com/settings/apps/new (personal) or `https://github.com/organizations/<org>/settings/apps/new` (org).
 
