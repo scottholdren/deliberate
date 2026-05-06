@@ -50,6 +50,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install gstack
+        # gstack is Deliberate's hard dependency. Skills land at ~/.claude/skills/gstack/
+        # and become available to the orchestrator with their gstack-* prefix.
+        # TODO: pin GSTACK_REF to a known-good commit SHA after first successful e2e.
+        env:
+          GSTACK_REF: main
+        run: |
+          mkdir -p $HOME/.claude/skills
+          git clone --depth 1 --branch "$GSTACK_REF" \
+            https://github.com/garrytan/gstack.git $HOME/.claude/skills/gstack
+          if [ -x $HOME/.claude/skills/gstack/setup ]; then
+            $HOME/.claude/skills/gstack/setup
+          fi
+
       - name: Get App installation token
         id: app-token
         uses: actions/create-github-app-token@v1

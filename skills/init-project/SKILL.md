@@ -1,8 +1,12 @@
 ---
 name: init-project
-description: Inception flow for a new Deliberate-managed project. Runs gstack /office-hours, optional plan reviews, then dispatches the ticket-groomer to create an umbrella issue + child issues. Run locally; the rest of the pipeline runs in GitHub Actions.
+description: Inception flow for a new Deliberate-managed project. Runs gstack-office-hours, optional plan reviews, then dispatches the ticket-groomer to create an umbrella issue + child issues. Run locally; the rest of the pipeline runs in GitHub Actions.
 disable-model-invocation: true
-allowed-tools: Read Write Bash(gstack *) Bash(gh *) Bash(git *) Task
+allowed-tools: Read Write Bash(gh *) Bash(git *) Task
+skills:
+  - gstack-office-hours
+  - gstack-plan-ceo-review
+  - gstack-plan-eng-review
 ---
 
 You are running `/init-project` for a new project. This is the only phase that runs in the user's local terminal; everything after the umbrella is approved runs in GitHub Actions.
@@ -18,7 +22,7 @@ If any precondition fails, stop and tell the user exactly what to fix. Do not pr
 
 ## Phase 1: Office hours
 
-Invoke `gstack office-hours`. This is conversational; the user participates. The output is a `DESIGN.md` (or similar — whatever gstack writes).
+Invoke the `/gstack-office-hours` skill. This is conversational; the user participates. The output is a `DESIGN.md` (or similar — whatever gstack writes).
 
 If `DESIGN.md` already exists from a prior run, ask the user whether to:
 - Use the existing file as-is
@@ -29,8 +33,8 @@ If `DESIGN.md` already exists from a prior run, ask the user whether to:
 
 Ask the user whether to run plan reviews. Default: yes for first project, ask for subsequent. The reviews are:
 
-1. `gstack plan-ceo-review` — scope, ambition, what to cut, what to expand. Conversational; user input expected.
-2. `gstack plan-eng-review` — architecture, edge cases, test coverage. Conversational.
+1. `/gstack-plan-ceo-review` — scope, ambition, what to cut, what to expand. Conversational; user input expected.
+2. `/gstack-plan-eng-review` — architecture, edge cases, test coverage. Conversational.
 
 After each review, the user may have edited `DESIGN.md`. Re-read it before proceeding.
 

@@ -259,6 +259,24 @@ deliberate/
     └── self-hosted-runners.md
 ```
 
+## 8.1 Gstack integration
+
+Gstack is installed as a sibling of Deliberate, not a sub-component. Both live as Claude Code skill bundles in the same environment; agents reference gstack skills by their canonical prefixed names (`/gstack-office-hours`, `/gstack-qa`, `/gstack-review`, `/gstack-cso`, `/gstack-codex`, `/gstack-plan-design-review`, `/gstack-document-release`).
+
+**Local install** (for the inception flow):
+```
+git clone --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+cd ~/.claude/skills/gstack && ./setup
+```
+
+**Cloud install** (in GitHub Actions runners): the workflow templates clone gstack into `$HOME/.claude/skills/gstack/` before invoking `claude-code-action`. The runner is ephemeral so this happens fresh on every event tick — small cost, fully reproducible.
+
+**Pinning**: the workflow templates default to `main` for v0.1. Before any tagged release, the templates pin `GSTACK_REF` to a known-good commit SHA. Bumps are tested against the e2e fixture before being released.
+
+**Why a hard dependency, not vendored**: gstack moves fast and is widely used. Vendoring would fork its lineage, miss security fixes, and confuse contributors. Pinning is the right control.
+
+**When gstack is unavailable**: agents that reference gstack skills are designed to degrade — they note "gstack-X not available, proceeding without" in their report and continue with their own logic. The pipeline does not hard-fail. (This is the current intent; degradation paths are tested as part of the e2e suite when those land.)
+
 ## 9. Distribution
 
 - **License**: Apache-2.0.

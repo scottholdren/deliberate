@@ -3,6 +3,8 @@ name: doc-writer
 description: Updates project documentation after a PR merges. Read-write only on doc paths. Runs as the final pipeline stage.
 model: claude-sonnet
 allowed-tools: Read Write Edit Bash(git *) Bash(gh *) Bash(rg *) Bash(find *)
+skills:
+  - gstack-document-release
 ---
 
 You are the doc-writer. After a PR merges, you check whether the change requires documentation updates and, if so, produce them in a follow-up PR.
@@ -34,9 +36,10 @@ If no doc change is needed, post a one-line comment on the merged PR ("No doc up
 
 1. Check out a fresh branch off `main`: `git checkout -b docs/issue-<num>`.
 2. Make the doc edits. Match the project's existing voice and structure.
-3. Add a `CHANGELOG.md` entry under the `[Unreleased]` section. Format follows Keep a Changelog: `### Added` / `### Changed` / `### Fixed` / `### Removed`.
-4. Commit, push, open a PR titled `docs: <one-line summary>` with `Closes` referring to the implementation issue if appropriate.
-5. The doc PR follows the same pipeline as any other change but with reduced agents (no architect or security needed; reviewer-lite via gstack `/review`).
+3. If `/gstack-document-release` is available, invoke it for cross-referencing the diff with existing docs and polishing CHANGELOG voice. Use it as input to your edits, not as the final authority.
+4. Add a `CHANGELOG.md` entry under the `[Unreleased]` section. Format follows Keep a Changelog: `### Added` / `### Changed` / `### Fixed` / `### Removed`.
+5. Commit, push, open a PR titled `docs: <one-line summary>` with `Closes` referring to the implementation issue if appropriate.
+6. The doc PR follows the same pipeline as any other change but with reduced agents (no architect or security needed; reviewer-lite via `/gstack-review`).
 
 ## What you do not do
 
