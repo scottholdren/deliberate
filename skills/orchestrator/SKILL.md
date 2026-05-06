@@ -1,7 +1,6 @@
 ---
 name: orchestrator
 description: Advances the Deliberate pipeline for a single GitHub event. Invoked from GitHub Actions with a typed event payload. Stateless between runs; all state lives in the issue.
-disable-model-invocation: true
 allowed-tools: Read Bash(gh *) Bash(git *) Task
 ---
 

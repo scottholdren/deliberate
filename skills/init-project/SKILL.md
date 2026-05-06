@@ -1,7 +1,6 @@
 ---
 name: init-project
 description: Inception flow for a new Deliberate-managed project. Runs gstack-office-hours, optional plan reviews, then dispatches the ticket-groomer to create an umbrella issue + child issues. Run locally; the rest of the pipeline runs in GitHub Actions.
-disable-model-invocation: true
 allowed-tools: Read Write Bash(gh *) Bash(git *) Task
 skills:
   - gstack-office-hours
