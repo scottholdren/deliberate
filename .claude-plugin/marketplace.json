@@ -6,7 +6,7 @@
   "plugins": [
     {
       "name": "deliberate",
-      "source": "."
+      "source": "./"
     }
   ]
 }
