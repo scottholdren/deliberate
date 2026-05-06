@@ -1,0 +1,35 @@
+# Node / TS
+node_modules/
+dist/
+build/
+*.log
+.npm
+.yarn/cache
+.yarn/install-state.gz
+.pnp.*
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test outputs
+coverage/
+.nyc_output/
+
+# Claude Code local state (per-user, never committed)
+.claude/settings.local.json
+.claude/projects/
+
+# Local fixtures generated during e2e testing
+tests/fixtures/.workspace/
