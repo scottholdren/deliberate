@@ -64,22 +64,6 @@ jobs:
           git clone --depth 1 --branch "$DELIBERATE_REF" \
             https://github.com/scottholdren/deliberate.git \
             $HOME/.claude/plugins/deliberate
-          mkdir -p $HOME/.claude
-          cat > $HOME/.claude/settings.json <<'EOF'
-          {
-            "enabledPlugins": {
-              "deliberate@deliberate": true
-            },
-            "extraKnownMarketplaces": {
-              "deliberate": {
-                "source": {
-                  "source": "directory",
-                  "path": "/home/runner/.claude/plugins/deliberate"
-                }
-              }
-            }
-          }
-          EOF
 
       - name: Get App installation token
         id: app-token
@@ -109,6 +93,7 @@ jobs:
           )
 
           claude -p "$PROMPT" \
+            --plugin-dir $HOME/.claude/plugins/deliberate \
             --permission-mode bypassPermissions \
             --output-format text \
             --verbose

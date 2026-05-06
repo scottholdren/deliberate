@@ -77,8 +77,10 @@ jobs:
           cd $HOME/.claude/skills/gstack && ./setup --prefix
 
       - name: Install Deliberate plugin
-        # Clone the deliberate plugin to the runner's plugins dir and enable
-        # it in settings.json so /deliberate:* slash commands are available.
+        # Clone the deliberate plugin so the orchestrator step can load it
+        # via --plugin-dir. enabledPlugins in settings.json activates an
+        # installed plugin, not raw files — for headless use we bypass the
+        # marketplace install entirely with --plugin-dir.
         # TODO: pin DELIBERATE_REF to a release tag after first successful e2e.
         env:
           DELIBERATE_REF: main
@@ -87,22 +89,6 @@ jobs:
           git clone --depth 1 --branch "$DELIBERATE_REF" \
             https://github.com/scottholdren/deliberate.git \
             $HOME/.claude/plugins/deliberate
-          mkdir -p $HOME/.claude
-          cat > $HOME/.claude/settings.json <<'EOF'
-          {
-            "enabledPlugins": {
-              "deliberate@deliberate": true
-            },
-            "extraKnownMarketplaces": {
-              "deliberate": {
-                "source": {
-                  "source": "directory",
-                  "path": "/home/runner/.claude/plugins/deliberate"
-                }
-              }
-            }
-          }
-          EOF
 
       - name: Get App installation token
         id: app-token
@@ -146,6 +132,7 @@ jobs:
           )
 
           claude -p "$PROMPT" \
+            --plugin-dir $HOME/.claude/plugins/deliberate \
             --permission-mode bypassPermissions \
             --output-format text \
             --verbose
