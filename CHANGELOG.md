@@ -7,5 +7,13 @@ All notable changes to Deliberate are documented here. Format follows [Keep a Ch
 ### Added
 - Initial design document (`DESIGN.md`) capturing the architecture, principles, and roadmap.
 - Project scaffolding: `LICENSE` (Apache-2.0), `README.md`, `SECURITY.md`, `CONTRIBUTING.md`, `.gitignore`.
+- Plugin manifest (`.claude-plugin/plugin.json`).
+- Eight pipeline agents (`ticket-groomer`, `architect`, `dev`, `qa`, `reviewer`, `security`, `merger`, `doc-writer`) with role-scoped tool allowlists. Reviewer/QA/security have no Write or Edit access by design.
+- Five helper agents (`codex-consult`, `security-consult`, `design-consult`, `cost-check`, `human-question`) callable from pipeline agents as tools.
+- Three skills: `init-project` (local inception flow), `orchestrator` (event-driven dispatcher), `status` (on-demand snapshot).
+- GitHub Actions workflow templates for event-driven orchestration and the hourly sweeper, under `templates/workflows/`.
+- Notifier contract documentation (`notifiers/CONTRIBUTING.md`) for adapter authors.
+- Plugin self-CI workflow (`.github/workflows/ci.yml`) validating manifest, agent frontmatter, skill frontmatter, and workflow YAML.
+- Test scaffolding (`tests/README.md`).
 
 [Unreleased]: https://github.com/scottholdren/deliberate/compare/HEAD...HEAD

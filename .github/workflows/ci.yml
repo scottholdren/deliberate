@@ -1,0 +1,73 @@
+# Plugin self-CI — validates the manifest, agent files, and skill files parse correctly.
+# Does not run the pipeline against itself; that's e2e work.
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate plugin.json
+        run: |
+          python3 -c "import json; json.load(open('.claude-plugin/plugin.json'))"
+
+      - name: Validate agent frontmatter
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          ok = True
+          for root, _, files in os.walk("agents"):
+            for f in files:
+              if not f.endswith(".md"): continue
+              path = os.path.join(root, f)
+              text = open(path).read()
+              m = re.match(r"^---\n(.+?)\n---\n", text, re.DOTALL)
+              if not m:
+                print(f"missing frontmatter: {path}")
+                ok = False
+                continue
+              fm = m.group(1)
+              for required in ("name:", "description:"):
+                if required not in fm:
+                  print(f"{path}: missing {required}")
+                  ok = False
+          sys.exit(0 if ok else 1)
+          PY
+
+      - name: Validate skill frontmatter
+        run: |
+          python3 - <<'PY'
+          import os, re, sys
+          ok = True
+          for root, _, files in os.walk("skills"):
+            for f in files:
+              if f != "SKILL.md": continue
+              path = os.path.join(root, f)
+              text = open(path).read()
+              m = re.match(r"^---\n(.+?)\n---\n", text, re.DOTALL)
+              if not m:
+                print(f"missing frontmatter: {path}")
+                ok = False
+                continue
+              fm = m.group(1)
+              if "description:" not in fm:
+                print(f"{path}: missing description")
+                ok = False
+          sys.exit(0 if ok else 1)
+          PY
+
+      - name: Validate workflow templates parse
+        run: |
+          for f in templates/workflows/*.yml .github/workflows/*.yml; do
+            python3 -c "import yaml,sys; yaml.safe_load(open('$f'))" || exit 1
+          done

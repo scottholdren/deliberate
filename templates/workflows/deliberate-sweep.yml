@@ -1,0 +1,68 @@
+# Deliberate — scheduled sweeper workflow
+#
+# Copy this file into your repo as `.github/workflows/deliberate-sweep.yml`.
+# Runs hourly. Catches dropped events, stalled issues, expired questions,
+# cost-cap proximity, and posts cross-project rollups.
+#
+# Same secret requirements as deliberate-events.yml.
+
+name: deliberate-sweep
+
+on:
+  schedule:
+    # Hourly at :07 to spread load away from the hour mark
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: deliberate-sweep-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.DELIBERATE_APP_ID }}
+          private-key: ${{ secrets.DELIBERATE_APP_PRIVATE_KEY }}
+
+      - name: Run sweeper
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin-url: https://github.com/scottholdren/deliberate
+          prompt: |
+            Run the orchestrator skill in sweeper mode. Scan all open issues with
+            state:* labels in this repo. For each issue:
+
+            1. If state:in-progress and no progress for >2 hours: investigate; if
+               agent crashed mid-run, reset stage and re-invoke. If genuinely
+               stuck, post a question via human-question.
+            2. If blocked-on-human and the question is exactly 6 hours old (within
+               sweeper window), fire one reminder via configured notifiers. Do
+               not fire reminders past the first.
+            3. Tally cost across all in-flight issues. If approaching the
+               per-project daily cap (>80%), post an info-only summary to a
+               designated cost-tracking issue if one exists.
+            4. Surface anomalies: issues with conflicting labels, orphan PRs,
+               umbrellas with no children, etc.
+
+            Read-only by default. Take action only on the specific cases above.
+          allowed-tools: Read,Bash,Task

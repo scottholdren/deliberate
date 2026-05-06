@@ -1,0 +1,12 @@
+{
+  "name": "deliberate",
+  "description": "Issue-driven autonomous SDLC orchestrator for Claude Code. Built on gstack.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Scott Holdren",
+    "url": "https://github.com/scottholdren"
+  },
+  "homepage": "https://github.com/scottholdren/deliberate",
+  "repository": "https://github.com/scottholdren/deliberate",
+  "license": "Apache-2.0"
+}

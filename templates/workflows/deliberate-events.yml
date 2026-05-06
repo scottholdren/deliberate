@@ -1,0 +1,89 @@
+# Deliberate — event-driven orchestrator workflow
+#
+# Copy this file into your repo as `.github/workflows/deliberate-events.yml`.
+# Requires:
+#   - The Deliberate GitHub App installed on this repo (or org).
+#   - Secrets configured at the repo or org level:
+#       ANTHROPIC_API_KEY  — your Anthropic API key
+#       DELIBERATE_APP_ID, DELIBERATE_APP_PRIVATE_KEY  — for App auth
+#   - Optional notifier secrets (only if you've configured them in
+#     .deliberate/config.yml):
+#       DISCORD_WEBHOOK_URL
+
+name: deliberate-events
+
+on:
+  issues:
+    types: [opened, edited, labeled, unlabeled, closed, reopened]
+  issue_comment:
+    types: [created, edited]
+  pull_request:
+    types: [opened, synchronize, closed, reopened]
+  pull_request_review:
+    types: [submitted]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Issue number to advance"
+        required: false
+      event:
+        description: "Synthetic event name"
+        required: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  checks: write
+
+concurrency:
+  group: deliberate-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.label.name, 'decision:abandoned') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.DELIBERATE_APP_ID }}
+          private-key: ${{ secrets.DELIBERATE_APP_PRIVATE_KEY }}
+
+      - name: Build event payload
+        id: payload
+        run: |
+          cat > /tmp/event.json <<EOF
+          {
+            "event": "${{ github.event_name }}.${{ github.event.action }}",
+            "repo": "${{ github.repository }}",
+            "issue": ${{ toJSON(github.event.issue.number || null) }},
+            "pr": ${{ toJSON(github.event.pull_request.number || null) }},
+            "label": ${{ toJSON(github.event.label.name || null) }},
+            "comment_id": ${{ toJSON(github.event.comment.id || null) }},
+            "actor": "${{ github.actor }}"
+          }
+          EOF
+          echo "Built event payload:"
+          cat /tmp/event.json
+
+      - name: Run orchestrator
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        with:
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          plugin-url: https://github.com/scottholdren/deliberate
+          prompt: |
+            Run the orchestrator skill for the following event:
+
+            $(cat /tmp/event.json)
+          allowed-tools: Read,Bash,Task
