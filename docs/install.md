@@ -99,9 +99,24 @@ In Claude Code, run:
 /plugin install deliberate@deliberate
 ```
 
-The first command registers the Deliberate repo as a single-plugin marketplace. The second installs the `deliberate` plugin from that marketplace. The `@deliberate` suffix is the marketplace name (derived from the repo name) — it is required, the install fails without it.
+The first command registers the Deliberate repo as a single-plugin marketplace. The second installs the plugin. The `@deliberate` suffix is the marketplace name (derived from the repo name) — it is required, the install fails silently without it.
 
-Verify: in Claude Code, run `/` and look for `init-project`, `orchestrator`, and `status` in the slash-command autocomplete. You should also see `deliberate` listed under `/plugin list`.
+**Scope prompt**: the installer asks where to enable the plugin:
+- **User** — enabled for all projects on this machine. Persists across sessions. **Recommended** for the project owner; you'll want Deliberate available wherever you run Claude Code.
+- **Project** — enabled only for the current project (committed to `.claude/settings.json`).
+- **Local** — enabled only for the current project, for you only (in `.claude/settings.local.json`, gitignored).
+
+Pick **User**.
+
+**Reload required**: after install, run:
+
+```
+/reload-plugins
+```
+
+The plugin's slash commands aren't available in the current session until you reload.
+
+Verify: type `/` and look for `init-project`, `orchestrator`, and `status` in the autocomplete. `/plugin list` should also show `deliberate` enabled.
 
 ### Alternative: local-clone path for development
 
