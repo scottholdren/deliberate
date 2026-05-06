@@ -18,15 +18,15 @@ This doc walks you from zero to a working Deliberate setup against a test repo. 
 
 2. Fill in the form:
    - **GitHub App name**: `deliberate-bot-<your-username>` (must be globally unique on GitHub).
+   - **Description**: optional, but useful for your future self. Suggested: `Deliberate orchestrator bot — drives the SDLC pipeline against issues in this repo. https://github.com/scottholdren/deliberate`
    - **Homepage URL**: your fork of the Deliberate repo URL is fine.
-   - **Webhook**: **Uncheck "Active"**. Deliberate uses GitHub Actions for event delivery, not the App's webhook. (If you can't uncheck it, set the URL to `https://example.com` and a random secret — they won't be used.)
-   - **Repository permissions** (set to read/write where indicated):
+   - **Webhook**: **Uncheck "Active"**. Deliberate uses GitHub Actions for event delivery, not the App's webhook. With "Active" unchecked, the URL and secret fields are ignored and the "Subscribe to events" section is hidden (which is what we want — leave it hidden).
+   - **Repository permissions** (alphabetical, set to the value indicated):
+     - Checks: **Read and write**
      - Contents: **Read and write**
      - Issues: **Read and write**
+     - Metadata: **Read-only** (auto-selected, can't be changed)
      - Pull requests: **Read and write**
-     - Checks: **Read and write**
-     - Metadata: **Read-only** (auto-selected)
-   - **Subscribe to events**: leave all unchecked (we don't use webhooks).
    - **Where can this GitHub App be installed?**: "Only on this account" is fine for a personal test.
 
 3. Click **Create GitHub App**.
