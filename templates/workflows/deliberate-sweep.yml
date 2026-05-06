@@ -33,6 +33,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Bun
+        # gstack's setup script requires bun.
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install gstack with --prefix
         env:
           GSTACK_REF: main

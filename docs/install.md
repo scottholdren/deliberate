@@ -81,6 +81,8 @@ In the **`deliberate-fixture`** repo (not the Deliberate repo):
 
 Deliberate references gstack skills by their `gstack-*` prefixed names. Install gstack with `--prefix`:
 
+> **Prereq**: gstack's setup script requires [bun](https://bun.sh). If you don't have it: `curl -fsSL https://bun.sh/install | bash`. (The cloud workflow installs bun automatically; only matters for the local install.)
+
 ```
 git clone --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
 cd ~/.claude/skills/gstack && ./setup --prefix
