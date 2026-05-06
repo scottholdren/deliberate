@@ -41,16 +41,14 @@ This doc walks you from zero to a working Deliberate setup against a test repo. 
 
 ## Step 3: Install the App on a test repo
 
-1. Create a fresh test repo (or pick one you don't mind experimenting in):
+1. Create a fresh test repo (or pick one you don't mind experimenting in). One command does creation + initial README + clone:
    ```
-   gh repo create deliberate-fixture --public --description "Deliberate test repo"
+   gh repo create deliberate-fixture --public --add-readme --clone \
+     --description "Deliberate test repo"
    cd deliberate-fixture
-   git init
-   echo "# deliberate-fixture" > README.md
-   git add README.md
-   git commit -m "Initial commit"
-   git push -u origin main
    ```
+
+   You should land in a working clone with one commit on `main` (the auto-generated README).
 
 2. On your App's settings page, click **Install App** in the left sidebar.
 
