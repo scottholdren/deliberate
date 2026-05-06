@@ -19,6 +19,7 @@ permissions:
   issues: write
   pull-requests: write
   checks: write
+  id-token: write   # required by anthropics/claude-code-action for OIDC
 
 concurrency:
   group: deliberate-sweep-${{ github.repository }}
