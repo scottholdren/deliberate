@@ -90,30 +90,29 @@ Verify: open Claude Code and run `/gstack-office-hours --help` (or just `/` and 
 
 If you previously installed gstack without `--prefix`, re-run with the flag. Existing prefix-less symlinks in `~/.claude/skills/` will be replaced.
 
-## Step 6: Install Deliberate locally
+## Step 6: Install Deliberate
 
-For v0, install via local clone:
-
-```
-git clone https://github.com/scottholdren/deliberate.git ~/.claude/plugins/deliberate
-```
-
-Inside Claude Code, register it (the exact command may differ depending on your Claude Code version — try one):
+In Claude Code, run:
 
 ```
-/plugin install local ~/.claude/plugins/deliberate
+/plugin marketplace add scottholdren/deliberate
+/plugin install deliberate@deliberate
 ```
 
-Or:
+The first command registers the Deliberate repo as a single-plugin marketplace. The second installs the `deliberate` plugin from that marketplace. The `@deliberate` suffix is the marketplace name (derived from the repo name) — it is required, the install fails without it.
+
+Verify: in Claude Code, run `/` and look for `init-project`, `orchestrator`, and `status` in the slash-command autocomplete. You should also see `deliberate` listed under `/plugin list`.
+
+### Alternative: local-clone path for development
+
+If you're hacking on Deliberate itself and want to test local changes without going through GitHub:
 
 ```
-/plugin marketplace add https://github.com/scottholdren/deliberate
-/plugin install deliberate
+git clone https://github.com/scottholdren/deliberate.git ~/code/deliberate
+claude --plugin-dir ~/code/deliberate
 ```
 
-Verify: in Claude Code, you should see `/init-project`, `/orchestrator`, and `/status` in the slash command list.
-
-> **TODO before v0.1**: confirm the exact registration command and pin it here.
+Then `/reload-plugins` inside the session after edits.
 
 ## Step 7: Copy workflow templates and seed labels
 

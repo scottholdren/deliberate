@@ -25,5 +25,6 @@ All notable changes to Deliberate are documented here. Format follows [Keep a Ch
 ### Added (2)
 - `DESIGN.md` section 8.1 documenting the gstack integration model, including the `--prefix` requirement and the rationale (gstack's own README recommends `--prefix` when running another skill pack alongside it).
 - `docs/install.md` — step-by-step setup walkthrough covering GitHub App creation, secret configuration, gstack and Deliberate install, workflow templates, label seeding, and an end-to-end smoke test against a fresh test repo.
+- `.claude-plugin/marketplace.json` — declares the Deliberate repo as a single-plugin marketplace so adopters can `/plugin marketplace add scottholdren/deliberate` and `/plugin install deliberate@deliberate`.
 
 [Unreleased]: https://github.com/scottholdren/deliberate/compare/HEAD...HEAD

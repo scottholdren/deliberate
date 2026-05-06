@@ -1,0 +1,12 @@
+{
+  "name": "deliberate",
+  "owner": {
+    "name": "Scott Holdren"
+  },
+  "plugins": [
+    {
+      "name": "deliberate",
+      "source": "."
+    }
+  ]
+}
