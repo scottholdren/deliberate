@@ -19,7 +19,6 @@ permissions:
   issues: write
   pull-requests: write
   checks: write
-  id-token: write   # required by anthropics/claude-code-action for OIDC
 
 concurrency:
   group: deliberate-sweep-${{ github.repository }}
@@ -40,6 +39,14 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: Install gstack with --prefix
         env:
           GSTACK_REF: main
@@ -49,6 +56,31 @@ jobs:
             https://github.com/garrytan/gstack.git $HOME/.claude/skills/gstack
           cd $HOME/.claude/skills/gstack && ./setup --prefix
 
+      - name: Install Deliberate plugin
+        env:
+          DELIBERATE_REF: main
+        run: |
+          mkdir -p $HOME/.claude/plugins
+          git clone --depth 1 --branch "$DELIBERATE_REF" \
+            https://github.com/scottholdren/deliberate.git \
+            $HOME/.claude/plugins/deliberate
+          mkdir -p $HOME/.claude
+          cat > $HOME/.claude/settings.json <<'EOF'
+          {
+            "enabledPlugins": {
+              "deliberate@deliberate": true
+            },
+            "extraKnownMarketplaces": {
+              "deliberate": {
+                "source": {
+                  "source": "directory",
+                  "path": "/home/runner/.claude/plugins/deliberate"
+                }
+              }
+            }
+          }
+          EOF
+
       - name: Get App installation token
         id: app-token
         uses: actions/create-github-app-token@v1
@@ -57,29 +89,26 @@ jobs:
           private-key: ${{ secrets.DELIBERATE_APP_PRIVATE_KEY }}
 
       - name: Run sweeper
-        uses: anthropics/claude-code-action@v1
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          plugin-url: https://github.com/scottholdren/deliberate
-          prompt: |
-            Run the orchestrator skill in sweeper mode. Scan all open issues with
-            state:* labels in this repo. For each issue:
+        run: |
+          PROMPT=$(cat <<'PROMPT_EOF'
+          Run the /deliberate:orchestrator skill in sweeper mode for repo $GITHUB_REPOSITORY. Scan all open issues with state:* labels. For each issue:
 
-            1. If state:in-progress and no progress for >2 hours: investigate; if
-               agent crashed mid-run, reset stage and re-invoke. If genuinely
-               stuck, post a question via human-question.
-            2. If blocked-on-human and the question is exactly 6 hours old (within
-               sweeper window), fire one reminder via configured notifiers. Do
-               not fire reminders past the first.
-            3. Tally cost across all in-flight issues. If approaching the
-               per-project daily cap (>80%), post an info-only summary to a
-               designated cost-tracking issue if one exists.
-            4. Surface anomalies: issues with conflicting labels, orphan PRs,
-               umbrellas with no children, etc.
+          1. If state:in-progress and no progress for >2 hours: investigate; if agent crashed mid-run, reset stage and re-invoke. If genuinely stuck, post a question via human-question.
+          2. If blocked-on-human and the question is exactly 6 hours old (within sweeper window), fire one reminder via configured notifiers. Do not fire reminders past the first.
+          3. Tally cost across all in-flight issues. If approaching the per-project daily cap (>80%), post an info-only summary to a designated cost-tracking issue if one exists.
+          4. Surface anomalies: issues with conflicting labels, orphan PRs, umbrellas with no children, etc.
 
-            Read-only by default. Take action only on the specific cases above.
-          allowed-tools: Read,Bash,Task
+          Read-only by default. Take action only on the specific cases above.
+
+          After completing, print a one-line summary: how many issues scanned, how many actions taken.
+          PROMPT_EOF
+          )
+
+          claude -p "$PROMPT" \
+            --permission-mode bypassPermissions \
+            --output-format text \
+            --verbose

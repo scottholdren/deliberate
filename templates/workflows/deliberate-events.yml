@@ -35,7 +35,6 @@ permissions:
   issues: write
   pull-requests: write
   checks: write
-  id-token: write   # required by anthropics/claude-code-action for OIDC
 
 concurrency:
   group: deliberate-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
@@ -57,11 +56,17 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
       - name: Install gstack with --prefix
         # gstack is Deliberate's hard dependency. We install with --prefix so that
-        # gstack's skills are registered as /gstack-* (e.g., /gstack-qa) — gstack's
-        # own README recommends this when running another skill pack alongside it,
-        # which is exactly what Deliberate is.
+        # gstack's skills are registered as /gstack-* (e.g., /gstack-qa).
         # TODO: pin GSTACK_REF to a known-good commit SHA after first successful e2e.
         env:
           GSTACK_REF: main
@@ -71,6 +76,34 @@ jobs:
             https://github.com/garrytan/gstack.git $HOME/.claude/skills/gstack
           cd $HOME/.claude/skills/gstack && ./setup --prefix
 
+      - name: Install Deliberate plugin
+        # Clone the deliberate plugin to the runner's plugins dir and enable
+        # it in settings.json so /deliberate:* slash commands are available.
+        # TODO: pin DELIBERATE_REF to a release tag after first successful e2e.
+        env:
+          DELIBERATE_REF: main
+        run: |
+          mkdir -p $HOME/.claude/plugins
+          git clone --depth 1 --branch "$DELIBERATE_REF" \
+            https://github.com/scottholdren/deliberate.git \
+            $HOME/.claude/plugins/deliberate
+          mkdir -p $HOME/.claude
+          cat > $HOME/.claude/settings.json <<'EOF'
+          {
+            "enabledPlugins": {
+              "deliberate@deliberate": true
+            },
+            "extraKnownMarketplaces": {
+              "deliberate": {
+                "source": {
+                  "source": "directory",
+                  "path": "/home/runner/.claude/plugins/deliberate"
+                }
+              }
+            }
+          }
+          EOF
+
       - name: Get App installation token
         id: app-token
         uses: actions/create-github-app-token@v1
@@ -79,7 +112,6 @@ jobs:
           private-key: ${{ secrets.DELIBERATE_APP_PRIVATE_KEY }}
 
       - name: Build event payload
-        id: payload
         run: |
           cat > /tmp/event.json <<EOF
           {
@@ -95,32 +127,25 @@ jobs:
           echo "Built event payload:"
           cat /tmp/event.json
 
-      - name: Read event payload into output
-        id: read-event
-        run: |
-          {
-            echo 'payload<<DELIBERATE_EOF'
-            cat /tmp/event.json
-            echo 'DELIBERATE_EOF'
-          } >> "$GITHUB_OUTPUT"
-
       - name: Run orchestrator
-        uses: anthropics/claude-code-action@v1
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          plugin-url: https://github.com/scottholdren/deliberate
-          prompt: |
-            Invoke the `/deliberate:orchestrator` skill from the deliberate plugin.
-            The event payload to process is:
+        run: |
+          EVENT=$(cat /tmp/event.json)
+          PROMPT=$(cat <<PROMPT_EOF
+          Invoke the /deliberate:orchestrator skill against the following GitHub event payload. Do not reason about the event yourself before invoking the skill — the skill contains the routing logic.
 
-            ```json
-            ${{ steps.read-event.outputs.payload }}
-            ```
+          \`\`\`json
+          $EVENT
+          \`\`\`
 
-            After invoking the skill, report what stage the issue advanced to (or
-            why no advancement occurred) in one sentence.
-          allowed-tools: Read,Bash,Task
+          After the skill returns, print one sentence summarizing what changed on the issue/PR (or why no change occurred). If the skill is not available, say so explicitly.
+          PROMPT_EOF
+          )
+
+          claude -p "$PROMPT" \
+            --permission-mode bypassPermissions \
+            --output-format text \
+            --verbose
