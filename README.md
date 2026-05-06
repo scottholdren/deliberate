@@ -35,7 +35,38 @@ See [DESIGN.md](./DESIGN.md) for the full design, principles, and rationale.
 
 ## Install
 
-> _TODO: install instructions once the plugin manifest is in place._
+Deliberate is a Claude Code plugin. It depends on [gstack](https://github.com/garrytan/gstack), installed with the `--prefix` flag.
+
+### 1. Install gstack with `--prefix`
+
+```
+git clone --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+cd ~/.claude/skills/gstack && ./setup --prefix
+```
+
+The `--prefix` flag registers gstack's skills as `/gstack-office-hours`, `/gstack-qa`, etc. Deliberate references gstack skills by these prefixed names — gstack's own README recommends `--prefix` when running other skill packs alongside it, and Deliberate is one such pack.
+
+If you already have gstack installed without `--prefix`, re-run setup with the flag. Gstack reinstalls are quick.
+
+### 2. Install Deliberate
+
+> _TODO: marketplace install instructions once published. For v0, install via plugin URL._
+
+### 3. Per-repo setup (for repos you want Deliberate to manage)
+
+Copy the workflow templates into the target repo:
+
+```
+cp <deliberate>/templates/workflows/deliberate-events.yml .github/workflows/
+cp <deliberate>/templates/workflows/deliberate-sweep.yml .github/workflows/
+```
+
+Configure repo secrets:
+- `ANTHROPIC_API_KEY`
+- `DELIBERATE_APP_ID`, `DELIBERATE_APP_PRIVATE_KEY` (after installing the Deliberate GitHub App)
+- `DISCORD_WEBHOOK_URL` (optional, only if using the Discord notifier)
+
+Install the Deliberate GitHub App on the repo. (Setup details are in [docs/install.md](./docs/install.md) — TODO.)
 
 ## Configuration
 

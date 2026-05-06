@@ -261,21 +261,42 @@ deliberate/
 
 ## 8.1 Gstack integration
 
-Gstack is installed as a sibling of Deliberate, not a sub-component. Both live as Claude Code skill bundles in the same environment; agents reference gstack skills by their canonical prefixed names (`/gstack-office-hours`, `/gstack-qa`, `/gstack-review`, `/gstack-cso`, `/gstack-codex`, `/gstack-plan-design-review`, `/gstack-document-release`).
+Gstack is installed as a sibling of Deliberate, not a sub-component. Both live as Claude Code skill collections in the same environment.
 
-**Local install** (for the inception flow):
+### Naming: `--prefix` is required
+
+Gstack's setup script supports two install modes:
+- `./setup` (default) — bare skill names: `/office-hours`, `/qa`, `/review`, etc.
+- `./setup --prefix` — namespaced names: `/gstack-office-hours`, `/gstack-qa`, etc.
+
+**Deliberate requires the `--prefix` install.** Gstack's own README recommends `--prefix` "if you run other skill packs alongside gstack" — that is precisely Deliberate's relationship to gstack. Namespacing eliminates collisions between gstack's skill names and any others (Deliberate's own `/orchestrator`, `/init-project`, `/status`, plus future plugins users may install).
+
+Agent and skill files in this plugin reference gstack skills by their prefixed names (`/gstack-office-hours`, `/gstack-qa`, `/gstack-review`, `/gstack-cso`, `/gstack-codex`, `/gstack-plan-design-review`, `/gstack-document-release`).
+
+### Local install (for the inception flow)
+
 ```
 git clone --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
-cd ~/.claude/skills/gstack && ./setup
+cd ~/.claude/skills/gstack && ./setup --prefix
 ```
 
-**Cloud install** (in GitHub Actions runners): the workflow templates clone gstack into `$HOME/.claude/skills/gstack/` before invoking `claude-code-action`. The runner is ephemeral so this happens fresh on every event tick — small cost, fully reproducible.
+If a user already has gstack installed bare (without `--prefix`), they need to re-run setup with `--prefix` for Deliberate to find the skills. Reinstall is fast — gstack is mostly markdown files and symlinks.
 
-**Pinning**: the workflow templates default to `main` for v0.1. Before any tagged release, the templates pin `GSTACK_REF` to a known-good commit SHA. Bumps are tested against the e2e fixture before being released.
+### Cloud install (in GitHub Actions runners)
 
-**Why a hard dependency, not vendored**: gstack moves fast and is widely used. Vendoring would fork its lineage, miss security fixes, and confuse contributors. Pinning is the right control.
+The workflow templates clone gstack into `$HOME/.claude/skills/gstack/` and run `./setup --prefix` before invoking `claude-code-action`. Runners are ephemeral so this happens fresh on every event tick. Cost is small; reproducibility is total.
 
-**When gstack is unavailable**: agents that reference gstack skills are designed to degrade — they note "gstack-X not available, proceeding without" in their report and continue with their own logic. The pipeline does not hard-fail. (This is the current intent; degradation paths are tested as part of the e2e suite when those land.)
+### Pinning
+
+Workflow templates default `GSTACK_REF` to `main` for v0.1. Before any tagged release, `GSTACK_REF` is pinned to a known-good commit SHA. Bumps are tested against the e2e fixture before being released.
+
+### Why a hard dependency, not vendored
+
+Gstack moves fast and is widely used. Vendoring would fork its lineage, miss security fixes, and confuse contributors. Pinning to a SHA is the right control.
+
+### When gstack is unavailable
+
+Agents that reference gstack skills are designed to degrade — they note "gstack-X not available, proceeding without" in their report and continue with their own logic. The pipeline does not hard-fail on a missing gstack skill. (This is the current intent; degradation paths are tested as part of the e2e suite when those land.)
 
 ## 9. Distribution
 

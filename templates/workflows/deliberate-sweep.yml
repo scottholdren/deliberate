@@ -33,16 +33,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install gstack
+      - name: Install gstack with --prefix
         env:
           GSTACK_REF: main
         run: |
           mkdir -p $HOME/.claude/skills
           git clone --depth 1 --branch "$GSTACK_REF" \
             https://github.com/garrytan/gstack.git $HOME/.claude/skills/gstack
-          if [ -x $HOME/.claude/skills/gstack/setup ]; then
-            $HOME/.claude/skills/gstack/setup
-          fi
+          cd $HOME/.claude/skills/gstack && ./setup --prefix
 
       - name: Get App installation token
         id: app-token

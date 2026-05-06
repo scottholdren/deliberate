@@ -17,11 +17,12 @@ All notable changes to Deliberate are documented here. Format follows [Keep a Ch
 - Test scaffolding (`tests/README.md`).
 
 ### Changed
-- Agent and skill files now reference gstack skills by their canonical `gstack-*` prefixed names (e.g., `/gstack-office-hours` rather than `gstack office-hours`). Affected: `init-project`, `qa`, `reviewer`, `security`, `doc-writer`, `codex-consult`, `design-consult`. Subagent frontmatter declares required gstack skills via `skills:`.
-- Workflow templates install gstack into `$HOME/.claude/skills/gstack/` before invoking the orchestrator. Pinning is a TODO before v0.1 release.
+- Agent and skill files reference gstack skills by their `gstack-*` prefixed names (e.g., `/gstack-office-hours`). Subagent frontmatter declares required gstack skills via `skills:`.
+- Workflow templates install gstack into `$HOME/.claude/skills/gstack/` and run `./setup --prefix` before invoking the orchestrator. Pinning is a TODO before v0.1 release.
 - Removed incorrect `Bash(gstack *)` allowed-tool entries — gstack is a skill bundle, not a CLI binary.
+- README install section documents the gstack `--prefix` requirement and per-repo workflow setup.
 
 ### Added (2)
-- `DESIGN.md` section 8.1 documenting the gstack integration model.
+- `DESIGN.md` section 8.1 documenting the gstack integration model, including the `--prefix` requirement and the rationale (gstack's own README recommends `--prefix` when running another skill pack alongside it).
 
 [Unreleased]: https://github.com/scottholdren/deliberate/compare/HEAD...HEAD
