@@ -43,31 +43,35 @@ concurrency:
 jobs:
   orchestrate:
     runs-on: ubuntu-latest
-    # Only fire on events the orchestrator can act on. Unrelated label
-    # adds/removes, body edits, and stray comments don't boot a runner.
+    # Only fire on events the orchestrator can act on. Bot-authored events
+    # (the orchestrator's own label transitions, comments, and PRs) are
+    # filtered out — within a single tick the orchestrator chains stages
+    # until it hits a wait condition, so its own follow-on events should
+    # not trigger redundant ticks.
     if: |
       github.event_name == 'workflow_dispatch'
-      || (github.event_name == 'issues' && (
-            github.event.action == 'closed'
-            || github.event.action == 'reopened'
-            || (
-              (github.event.action == 'labeled' || github.event.action == 'unlabeled')
-              && (
-                startsWith(github.event.label.name, 'state:')
-                || startsWith(github.event.label.name, 'decision:')
-                || startsWith(github.event.label.name, 'kind:')
+      || (github.event.sender.type != 'Bot' && (
+            (github.event_name == 'issues' && (
+              github.event.action == 'closed'
+              || github.event.action == 'reopened'
+              || (
+                (github.event.action == 'labeled' || github.event.action == 'unlabeled')
+                && (
+                  startsWith(github.event.label.name, 'state:')
+                  || startsWith(github.event.label.name, 'decision:')
+                  || startsWith(github.event.label.name, 'kind:')
+                )
               )
-            )
+            ))
+            || (github.event_name == 'issue_comment'
+                && github.event.action == 'created')
+            || (github.event_name == 'pull_request' && (
+                  github.event.action == 'opened'
+                  || github.event.action == 'synchronize'
+                  || github.event.action == 'closed'
+                ))
+            || github.event_name == 'pull_request_review'
           ))
-      || (github.event_name == 'issue_comment'
-          && github.event.action == 'created'
-          && !github.event.comment.user.bot)
-      || (github.event_name == 'pull_request' && (
-            github.event.action == 'opened'
-            || github.event.action == 'synchronize'
-            || github.event.action == 'closed'
-          ))
-      || github.event_name == 'pull_request_review'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
