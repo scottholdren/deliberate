@@ -24,6 +24,10 @@ concurrency:
   group: deliberate-sweep-${{ github.repository }}
   cancel-in-progress: false
 
+env:
+  GSTACK_REF: main
+  DELIBERATE_REF: main
+
 jobs:
   sweep:
     runs-on: ubuntu-latest
@@ -44,21 +48,50 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Cache Claude Code CLI install
+        id: cache-claude
+        uses: actions/cache@v4
+        with:
+          path: |
+            /usr/local/lib/node_modules/@anthropic-ai
+            /usr/local/bin/claude
+            ~/.local/share/claude
+          key: claude-cli-${{ runner.os }}-v1
+
       - name: Install Claude Code CLI
+        if: steps.cache-claude.outputs.cache-hit != 'true'
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Cache gstack install
+        id: cache-gstack
+        uses: actions/cache@v4
+        with:
+          path: ~/.claude/skills
+          key: gstack-${{ env.GSTACK_REF }}-${{ runner.os }}-v1
+          restore-keys: |
+            gstack-${{ env.GSTACK_REF }}-${{ runner.os }}-
+            gstack-
+
       - name: Install gstack with --prefix
-        env:
-          GSTACK_REF: main
+        if: steps.cache-gstack.outputs.cache-hit != 'true'
         run: |
           mkdir -p $HOME/.claude/skills
           git clone --depth 1 --branch "$GSTACK_REF" \
             https://github.com/garrytan/gstack.git $HOME/.claude/skills/gstack
           cd $HOME/.claude/skills/gstack && ./setup --prefix
 
+      - name: Cache Deliberate plugin
+        id: cache-deliberate
+        uses: actions/cache@v4
+        with:
+          path: ~/.claude/plugins
+          key: deliberate-${{ env.DELIBERATE_REF }}-${{ runner.os }}-v1
+          restore-keys: |
+            deliberate-${{ env.DELIBERATE_REF }}-${{ runner.os }}-
+            deliberate-
+
       - name: Install Deliberate plugin
-        env:
-          DELIBERATE_REF: main
+        if: steps.cache-deliberate.outputs.cache-hit != 'true'
         run: |
           mkdir -p $HOME/.claude/plugins
           git clone --depth 1 --branch "$DELIBERATE_REF" \
