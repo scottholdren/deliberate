@@ -43,14 +43,17 @@ concurrency:
 jobs:
   orchestrate:
     runs-on: ubuntu-latest
-    # Only fire on events the orchestrator can act on. Bot-authored events
-    # (the orchestrator's own label transitions, comments, and PRs) are
-    # filtered out — within a single tick the orchestrator chains stages
-    # until it hits a wait condition, so its own follow-on events should
-    # not trigger redundant ticks.
+    # Only fire on events the orchestrator can act on. The sender type
+    # check (== 'User') is restrictive on purpose: anything authored by
+    # a Bot, GitHub App, or Organization is suppressed. Within a single
+    # tick the orchestrator chains stages until it hits a wait
+    # condition, so its own follow-on events MUST NOT trigger redundant
+    # ticks.
     if: |
       github.event_name == 'workflow_dispatch'
-      || (github.event.sender.type != 'Bot' && (
+      || (github.event.sender.type == 'User'
+          && !endsWith(github.event.sender.login, '[bot]')
+          && (
             (github.event_name == 'issues' && (
               github.event.action == 'closed'
               || github.event.action == 'reopened'
