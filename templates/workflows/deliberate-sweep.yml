@@ -9,9 +9,11 @@
 name: deliberate-sweep
 
 on:
-  schedule:
-    # Hourly at :07 to spread load away from the hour mark
-    - cron: "7 * * * *"
+  # Cron disabled by default to avoid silent recurring API spend during
+  # initial setup and dev. Uncomment when you want the sweeper running
+  # routinely.
+  # schedule:
+  #   - cron: "7 * * * *"   # hourly at :07
   workflow_dispatch:
 
 permissions:
