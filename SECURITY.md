@@ -37,7 +37,8 @@ Deliberate operates across several trust boundaries. Treating them clearly is co
 
 ## Permissions
 
-- The Deliberate GitHub App requests the minimum permissions needed: issues r/w, pulls r/w, contents r/w, checks w. It does not request admin, billing, or org-level permissions.
+- The Deliberate GitHub App requests the minimum permissions needed: issues r/w, pulls r/w, contents r/w, checks r/w, workflows r/w. It does not request admin, billing, or org-level permissions.
+- The `workflows` permission is required so the dev agent can add or modify CI workflow files alongside the code that needs them. It is a real privilege expansion: a compromised bot could alter CI behavior. Mitigations: branch protection still gates merges, the reviewer agent reads workflow diffs as part of every Verify cycle, and the bot cannot bypass required reviews.
 - Branch protection on `main` is assumed and respected. The merger agent cannot bypass required reviews or status checks.
 - Each subagent declares an explicit tool allowlist. Reviewer/QA/security agents have no Write or Edit tool access by design.
 

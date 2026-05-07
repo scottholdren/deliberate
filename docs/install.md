@@ -39,6 +39,7 @@ This is separate from the `deliberate-bot` App you create in step 1b. Anthropic'
      - Issues: **Read and write**
      - Metadata: **Read-only** (auto-selected, can't be changed)
      - Pull requests: **Read and write**
+     - Workflows: **Read and write**   *(needed for the dev agent to modify `.github/workflows/*.yml`)*
    - **Where can this GitHub App be installed?**: "Only on this account" is fine for a personal test.
 
 3. Click **Create GitHub App**.
